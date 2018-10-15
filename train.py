@@ -1,0 +1,86 @@
+from pathlib import Path
+
+import torch
+from ignite.engine import Engine, Events
+from ignite.metrics import Loss, CategoricalAccuracy
+
+from config import Config
+from utils.helpers import get_model_params, create_word_embeddings, create_model, get_dataset
+from utils.torch import create_data_loader, get_trainable_parameters, to_device
+
+
+def main(cfg):
+    dataset_train, dataset_dev = get_dataset(cfg)
+
+    W_emb = create_word_embeddings(cfg, dataset_train.vocab)
+    model_params = get_model_params(cfg, W_emb)
+    model = create_model(cfg, model_params, W_emb=W_emb)
+
+    data_loader_train = create_data_loader(dataset_train, cfg.batch_size, shuffle=True)
+    data_loader_dev = create_data_loader(dataset_dev, cfg.batch_size, shuffle=False)
+
+    model_parameters = get_trainable_parameters(model.parameters())
+    optimizer = torch.optim.Adam(model_parameters, cfg.learning_rate, weight_decay=cfg.weight_decay, amsgrad=True)
+    criterion = torch.nn.CrossEntropyLoss()
+
+    def update_function(engine, batch):
+        model.train()
+
+        (premise, hypothesis), label = to_device(batch)
+
+        logits = model(premise, hypothesis)
+        loss = criterion(logits, label)
+
+        optimizer.zero_grad()
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(model_parameters, cfg.max_grad_norm)
+        optimizer.step()
+
+        return loss.item()
+
+    def inference_function(engine, batch):
+        model.eval()
+        with torch.no_grad():
+            (premise, hypothesis), label = to_device(batch)
+
+            logits = model(premise, hypothesis)
+
+            return logits, label
+
+    trainer = Engine(update_function)
+    evaluator = Engine(inference_function)
+
+    metrics = [
+        ('loss', Loss(criterion)),
+        ('accuracy', CategoricalAccuracy())
+    ]
+    for name, metric in metrics:
+        metric.attach(evaluator, name)
+
+    @trainer.on(Events.EPOCH_COMPLETED)
+    def eval_model(engine):
+        def format_metric_str(metrics_values):
+            metrics_str = ', '.join([
+                f'{metric_name} {metrics_train[metric_name]:.3f}' for metric_name, _ in metrics
+            ])
+            return metrics_str
+
+        evaluator.run(data_loader_train)
+        metrics_train = evaluator.state.metrics.copy()
+
+        evaluator.run(data_loader_dev)
+        metrics_dev = evaluator.state.metrics.copy()
+
+        print(f'Epoch {engine.state.epoch}', end=' | ')
+        print('Train:', format_metric_str(metrics_train), end=' | ')
+        print('Dev:', format_metric_str(metrics_dev), end=' ')
+        print()
+
+    trainer.run(data_loader_train, max_epochs=cfg.nb_epochs)
+
+
+if __name__ == '__main__':
+    data_dir = Path(__file__).parent.joinpath('data/')
+    cfg = Config(data_dir=data_dir)
+
+    main(cfg)
