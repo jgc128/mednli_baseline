@@ -8,12 +8,16 @@ import dataclasses
 class WordEmbeddings(enum.Enum):
     GloVe = 'glove'
     MIMIC = 'mimic'
-    GloVeBioAsqMIMIC = 'glove_bio_asq_mimic'
+    BioAsq = 'bioasq'
+    WikiEn = 'wikien'
+    WikiEnMIMIC = 'wikien_mimic'
+    GloVeBioAsq = 'glove_bioasq'
+    GloVeBioAsqMIMIC = 'glove_bioasq_mimic'
 
 
 @enum.unique
 class Models(enum.Enum):
-    Simple = 'simple'
+    Simple = 'simple' # CBOW model
     InferSent = 'infersent'
 
 
@@ -34,7 +38,7 @@ class Config:
     learning_rate: float = 1e-3
     max_grad_norm: float = 5.0
     batch_size: int = 64
-    nb_epochs: int = 15
+    nb_epochs: int = 30
 
     @property
     def mednli_dir(self) -> Path:

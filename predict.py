@@ -2,12 +2,11 @@ import sys
 from pathlib import Path
 
 import numpy as np
-import torch
 import torch.nn.functional as F
 
 from utils.dataset import NLIDataset
 from utils.helpers import create_model
-from utils.mednli import read_mednli
+from utils.mednli import read_mednli, read_sentences
 from utils.pickle import load_pickle
 from utils.torch import load_weights, create_data_loader, to_device
 
@@ -19,6 +18,21 @@ def save_predictions(predictions, filename):
         np.savetxt(f, predictions, fmt='%.5f', delimiter=',')
 
     print(f'Saved: {filename}')
+
+
+def get_input_data(filename):
+    input_data = None
+
+    if filename.suffix == '.jsonl':
+        input_data = read_mednli(input_filename)
+
+    if filename.suffix == '.txt':
+        input_data = read_sentences(filename)
+
+    if input_data is None:
+        raise ValueError(f'Cannot determine input file format: {filename}')
+
+    return input_data
 
 
 def main(model_spec_filename, input_filename, output_filename):
@@ -35,7 +49,7 @@ def main(model_spec_filename, input_filename, output_filename):
     model.eval()
     load_weights(model, cfg.models_dir.joinpath(f'{model_name}.pt'))
 
-    input_data = read_mednli(input_filename)
+    input_data = get_input_data(input_filename)
     print(f'Input data: {len(input_data)}')
 
     dataset = NLIDataset(input_data, vocab=vocab, lowercase=cfg.lowercase, max_len=cfg.max_len)

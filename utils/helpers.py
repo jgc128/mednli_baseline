@@ -57,6 +57,14 @@ def create_word_embeddings(cfg, vocab):
         word_embeddings_filename = 'glove.840B.300d.pickled'
     if cfg.word_embeddings == WordEmbeddings.MIMIC:
         word_embeddings_filename = 'mimic.fastText.no_clean.300d.pickled'
+    if cfg.word_embeddings == WordEmbeddings.BioAsq:
+        word_embeddings_filename = 'bio_asq.no_clean.300d.pickled'
+    if cfg.word_embeddings == WordEmbeddings.WikiEn:
+        word_embeddings_filename = 'wiki_en.fastText.300d.pickled'
+    if cfg.word_embeddings == WordEmbeddings.WikiEnMIMIC:
+        word_embeddings_filename = 'wiki_en_mimic.fastText.no_clean.300d.pickled'
+    if cfg.word_embeddings == WordEmbeddings.GloVeBioAsq:
+        word_embeddings_filename = 'glove_bio_asq.no_clean.300d.pickled'
     if cfg.word_embeddings == WordEmbeddings.GloVeBioAsqMIMIC:
         word_embeddings_filename = 'glove_bio_asq_mimic.no_clean.300d.pickled'
 

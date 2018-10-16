@@ -1,5 +1,7 @@
 import json
 
+from nltk import word_tokenize
+
 
 def get_tokens(sentence_binary_parse):
     sentence = sentence_binary_parse \
@@ -27,6 +29,14 @@ def read_mednli(filename):
 
     print(f'MedNLI file loaded: {filename}, {len(data)} examples')
     return data
+
+
+def read_sentences(filename):
+    with open(filename, 'r') as f:
+        lines = [l.split('\t') for l in f.readlines()]
+
+    input_data = [(word_tokenize(l[0]), word_tokenize(l[1]), None) for l in lines if len(l) == 2]
+    return input_data
 
 
 def load_mednli(cfg):
