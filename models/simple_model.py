@@ -20,22 +20,19 @@ class SimpleModel(torch.nn.Module):
             torch.nn.Dropout(dropout),
         )
 
-        self.fc = torch.nn.Sequential(
+        self.classifier = torch.nn.Sequential(
             torch.nn.Linear(hidden_size * 2, hidden_size),
             torch.nn.ELU(),
             torch.nn.Dropout(dropout),
             torch.nn.Linear(hidden_size, hidden_size),
             torch.nn.ELU(),
             torch.nn.Dropout(dropout),
-        )
-
-        self.out = torch.nn.Sequential(
             torch.nn.Linear(hidden_size, 3),
         )
 
     def forward(self, premise, hypothesis):
-        premise_len = get_sequences_lengths(premise).unsqueeze(-1).float()
-        hypothesis_len = get_sequences_lengths(hypothesis).unsqueeze(-1).float()
+        premise_len = get_sequences_lengths(premise)
+        hypothesis_len = get_sequences_lengths(hypothesis)
 
         premise_emb = self.embedding(premise)
         hypothesis_emb = self.embedding(hypothesis)
@@ -43,12 +40,11 @@ class SimpleModel(torch.nn.Module):
         premise_proj = self.projection(premise_emb)
         hypothesis_proj = self.projection(hypothesis_emb)
 
-        premise_h = torch.sum(premise_proj, dim=1) / premise_len
-        hypothesis_h = torch.sum(hypothesis_proj, dim=1) / hypothesis_len
+        premise_h = torch.sum(premise_proj, dim=1) / premise_len.unsqueeze(-1).float()
+        hypothesis_h = torch.sum(hypothesis_proj, dim=1) / hypothesis_len.unsqueeze(-1).float()
 
-        h = torch.cat([premise_h, hypothesis_h], dim=-1)
-        h_fc = self.fc(h)
+        h_combined = torch.cat([premise_h, hypothesis_h], dim=-1)
 
-        logits = self.out(h_fc)
+        logits = self.classifier(h_combined)
 
         return logits

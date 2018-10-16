@@ -1,7 +1,5 @@
 import json
 
-from utils.pickle import load_pickle, save_pickle
-
 
 def get_tokens(sentence_binary_parse):
     sentence = sentence_binary_parse \

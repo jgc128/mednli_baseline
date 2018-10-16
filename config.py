@@ -8,19 +8,21 @@ import dataclasses
 class WordEmbeddings(enum.Enum):
     GloVe = 'glove'
     MIMIC = 'mimic'
+    GloVeBioAsqMIMIC = 'glove_bio_asq_mimic'
 
 
 @enum.unique
 class Models(enum.Enum):
-    SimpleModel = 'simple'
+    Simple = 'simple'
+    InferSent = 'infersent'
 
 
 @dataclasses.dataclass
 class Config:
     data_dir: Path
 
-    model: Models = Models.SimpleModel
-    word_embeddings: WordEmbeddings = WordEmbeddings.GloVe
+    model: Models = Models.InferSent
+    word_embeddings: WordEmbeddings = WordEmbeddings.MIMIC
 
     lowercase: bool = True
     max_len: int = 50

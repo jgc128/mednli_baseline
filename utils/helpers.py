@@ -52,6 +52,8 @@ def create_word_embeddings(cfg, vocab):
         word_embeddings_filename = 'glove.840B.300d.pickled'
     if cfg.word_embeddings == WordEmbeddings.MIMIC:
         word_embeddings_filename = 'mimic.fastText.no_clean.300d.pickled'
+    if cfg.word_embeddings == WordEmbeddings.GloVeBioAsqMIMIC:
+        word_embeddings_filename = 'glove_bio_asq_mimic.no_clean.300d.pickled'
 
     word_embeddings_filename = cfg.word_embeddings_dir.joinpath(word_embeddings_filename)
     word_embeddings = load_pickle(word_embeddings_filename)
@@ -66,8 +68,10 @@ def create_model(cfg, model_params, **kwargs):
     model_class = None
     model_params.update(kwargs)
 
-    if cfg.model == Models.SimpleModel:
+    if cfg.model == Models.Simple:
         model_class = models.SimpleModel
+    if cfg.model == Models.InferSent:
+        model_class = models.InferSentModel
 
     model = model_class(**model_params)
     init_weights(model)

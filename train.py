@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import numpy as np
 import torch
 from ignite.engine import Engine, Events
 from ignite.metrics import Loss, CategoricalAccuracy
@@ -25,13 +26,13 @@ def main(cfg):
 
     def update_function(engine, batch):
         model.train()
+        optimizer.zero_grad()
 
         (premise, hypothesis), label = to_device(batch)
 
         logits = model(premise, hypothesis)
         loss = criterion(logits, label)
 
-        optimizer.zero_grad()
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model_parameters, cfg.max_grad_norm)
         optimizer.step()
@@ -57,11 +58,15 @@ def main(cfg):
     for name, metric in metrics:
         metric.attach(evaluator, name)
 
+    best_dev_acc = -np.inf
+
     @trainer.on(Events.EPOCH_COMPLETED)
     def eval_model(engine):
+        nonlocal best_dev_acc
+
         def format_metric_str(metrics_values):
             metrics_str = ', '.join([
-                f'{metric_name} {metrics_train[metric_name]:.3f}' for metric_name, _ in metrics
+                f'{metric_name} {metrics_values[metric_name]:.3f}' for metric_name, _ in metrics
             ])
             return metrics_str
 
@@ -76,7 +81,12 @@ def main(cfg):
         print('Dev:', format_metric_str(metrics_dev), end=' ')
         print()
 
+        if metrics_dev['accuracy'] > best_dev_acc:
+            best_dev_acc = metrics_dev['accuracy']
+
     trainer.run(data_loader_train, max_epochs=cfg.nb_epochs)
+
+    print(f'Best dev accuracy: {best_dev_acc:.3f}')
 
 
 if __name__ == '__main__':

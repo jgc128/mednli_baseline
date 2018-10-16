@@ -97,3 +97,62 @@ def get_sequences_lengths(sequences, masking=0, dim=1):
     lengths = masks.sum(dim=dim)
 
     return lengths
+
+
+class LSTMEncoder(torch.nn.Module):
+    def __init__(self, input_size, hidden_size, bidirectional=False, return_sequence=False):
+        super(LSTMEncoder, self).__init__()
+
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.return_sequence = return_sequence
+        self.bidirectional = bidirectional
+
+        self.rnn = torch.nn.LSTM(input_size=input_size, hidden_size=hidden_size, bidirectional=bidirectional,
+                                 batch_first=True)
+
+    def zero_state(self, inputs):
+        batch_size = inputs.size()[0]
+
+        # The axes semantics are (num_layers, batch_size, hidden_dim)
+        nb_layers = 1 if not self.bidirectional else 2
+        state_shape = (nb_layers, batch_size, self.hidden_size)
+
+        h0, c0 = (inputs.new_zeros(state_shape), inputs.new_zeros(state_shape),)
+
+        return h0, c0
+
+    def forward(self, inputs, lengths=None):
+        h0, c0 = self.zero_state(inputs)
+
+        if lengths is not None:
+            # sort by length
+            lengths_sorted, inputs_sorted_idx = lengths.sort(descending=True)
+            inputs_sorted = inputs[inputs_sorted_idx]
+
+            # pack sequences
+            packed = torch.nn.utils.rnn.pack_padded_sequence(inputs_sorted, list(lengths_sorted.data), batch_first=True)
+
+            outputs, (h, c) = self.rnn(packed, (h0, c0))
+
+            # unpack sequences
+            outputs, _ = torch.nn.utils.rnn.pad_packed_sequence(outputs, batch_first=True)
+
+            # un-sort
+            _, inputs_unsorted_idx = inputs_sorted_idx.sort(descending=False)
+            outputs = outputs[inputs_unsorted_idx]
+
+            # concat in case of bidirectional, and just remove the first dim in case of unidirectional
+            h = torch.cat([x for x in h], dim=-1)
+            h = h[inputs_unsorted_idx]
+        else:
+            outputs, (h, c) = self.rnn(inputs, (h0, c0))
+
+            # concat in case of bidirectional, and just remove the fisrt dim in case of unidirectional
+            # h = torch.cat(h, dim=-1)
+            h = torch.cat([x for x in h], dim=-1)
+
+        if self.return_sequence:
+            return outputs
+        else:
+            return h
