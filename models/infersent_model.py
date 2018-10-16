@@ -5,7 +5,7 @@ from utils.torch import get_sequences_lengths, LSTMEncoder
 
 
 class InferSentModel(torch.nn.Module):
-    def __init__(self, hidden_size, dropout, vocab_size, embedding_size, trainable_embeddings, W_emb=None):
+    def __init__(self, hidden_size, dropout, vocab_size, embedding_size, trainable_embeddings, nb_classes,W_emb=None):
         super().__init__()
 
         self.embedding = torch.nn.Embedding(vocab_size, embedding_size, padding_idx=0)
@@ -23,7 +23,7 @@ class InferSentModel(torch.nn.Module):
             torch.nn.Linear(hidden_size, hidden_size),
             torch.nn.ELU(),
             torch.nn.Dropout(dropout),
-            torch.nn.Linear(hidden_size, 3),
+            torch.nn.Linear(hidden_size, nb_classes),
         )
 
     def forward(self, premise, hypothesis):

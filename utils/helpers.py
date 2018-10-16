@@ -1,3 +1,7 @@
+import random
+import string
+from datetime import datetime
+
 import numpy as np
 
 import models
@@ -17,6 +21,7 @@ def get_model_params(cfg, W_emb):
 
         vocab_size=W_emb.shape[0],
         embedding_size=W_emb.shape[1],
+        nb_classes=len(NLIDataset.LABEL_TO_ID),
     )
 
     return model_params
@@ -66,6 +71,7 @@ def create_word_embeddings(cfg, vocab):
 
 def create_model(cfg, model_params, **kwargs):
     model_class = None
+    model_params = model_params.copy()
     model_params.update(kwargs)
 
     if cfg.model == Models.Simple:
@@ -83,9 +89,6 @@ def create_model(cfg, model_params, **kwargs):
 
 
 def get_dataset(cfg):
-    if not cfg.cache_dir.exists():
-        cfg.cache_dir.mkdir()
-
     cache_filename = cfg.cache_dir.joinpath(f'dataset_{int(cfg.lowercase)}_{cfg.max_len}.pkl')
     if not cache_filename.exists():
         mednli_train, mednli_dev, mednli_test = load_mednli(cfg)
@@ -101,3 +104,22 @@ def get_dataset(cfg):
     print(f'Dataset: {len(dataset_train)} - {len(dataset_dev)},  Vocab: {len(dataset_train.vocab)}')
 
     return dataset_train, dataset_dev
+
+
+def randomize_name(name, include_date=False):
+    random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
+    if include_date:
+        current_date = datetime.now().strftime('%Y-%m-%d')
+        full_name = f'{name}.{current_date}.{random_suffix}'
+    else:
+        full_name = f'{name}.{random_suffix}'
+
+    return full_name
+
+
+def create_dirs(cfg):
+    target_dirs = [cfg.cache_dir, cfg.models_dir, ]
+
+    for target_dir in target_dirs:
+        if not target_dir.exists():
+            target_dir.mkdir()

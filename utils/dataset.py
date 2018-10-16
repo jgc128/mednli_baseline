@@ -6,6 +6,8 @@ from utils.vocab import Vocab
 
 
 class NLIDataset(torch.utils.data.Dataset):
+    LABEL_TO_ID = {'contradiction': 0, 'entailment': 1, 'neutral': 2}
+
     def __init__(self, mednli_data, lowercase=True, vocab=None, max_len=50):
         premise, hypothesis, label, = zip(*mednli_data)
 
@@ -27,8 +29,7 @@ class NLIDataset(torch.utils.data.Dataset):
         self.premise = self._convert_to_numpy(premise)
         self.hypothesis = self._convert_to_numpy(hypothesis)
 
-        self.label2id = {l: i for i, l in enumerate(sorted(set(label)))}
-        self.label = [self.label2id[l] for l in label]
+        self.label = [NLIDataset.LABEL_TO_ID[l] if l is not None else -1 for l in label]
 
     def _pad(self, sent, max_len):
         sent = sent[:max_len]

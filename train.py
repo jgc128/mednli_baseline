@@ -6,11 +6,23 @@ from ignite.engine import Engine, Events
 from ignite.metrics import Loss, CategoricalAccuracy
 
 from config import Config
-from utils.helpers import get_model_params, create_word_embeddings, create_model, get_dataset
-from utils.torch import create_data_loader, get_trainable_parameters, to_device
+from utils.helpers import get_model_params, create_word_embeddings, create_model, get_dataset, randomize_name, \
+    create_dirs
+from utils.pickle import save_pickle
+from utils.torch import create_data_loader, get_trainable_parameters, to_device, save_weights
+
+
+def get_model_name(cfg):
+    model_name = f'mednli.{cfg.model.name.lower()}.{cfg.word_embeddings.name.lower()}.{cfg.hidden_size}'
+
+    return model_name
 
 
 def main(cfg):
+    model_name = get_model_name(cfg)
+    model_name = randomize_name(model_name)
+    print(f'Model name: {model_name}')
+
     dataset_train, dataset_dev = get_dataset(cfg)
 
     W_emb = create_word_embeddings(cfg, dataset_train.vocab)
@@ -83,6 +95,12 @@ def main(cfg):
 
         if metrics_dev['accuracy'] > best_dev_acc:
             best_dev_acc = metrics_dev['accuracy']
+            save_weights(model, cfg.models_dir.joinpath(f'{model_name}.pt'))
+
+    # save models specifications
+    create_dirs(cfg)
+    model_spec = dict(model_name=model_name, model_params=model_params, vocab=dataset_train.vocab, cfg=cfg)
+    save_pickle(model_spec, cfg.models_dir.joinpath(f'{model_name}.pkl'))
 
     trainer.run(data_loader_train, max_epochs=cfg.nb_epochs)
 

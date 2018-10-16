@@ -30,11 +30,15 @@ class Config:
     dropout: float = 0.4
     trainable_embeddings: bool = False
 
-    weight_decay: float = 0.00001
+    weight_decay: float = 0.0001
     learning_rate: float = 1e-3
     max_grad_norm: float = 5.0
     batch_size: int = 64
-    nb_epochs: int = 30
+    nb_epochs: int = 15
+
+    @property
+    def mednli_dir(self) -> Path:
+        return self.data_dir.joinpath('mednli/')
 
     @property
     def cache_dir(self) -> Path:
@@ -43,3 +47,7 @@ class Config:
     @property
     def word_embeddings_dir(self) -> Path:
         return self.data_dir.joinpath('word_embeddings/')
+
+    @property
+    def models_dir(self) -> Path:
+        return self.data_dir.joinpath('models/')

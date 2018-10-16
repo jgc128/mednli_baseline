@@ -21,7 +21,7 @@ def read_mednli(filename):
 
             premise = get_tokens(example['sentence1_binary_parse'])
             hypothesis = get_tokens(example['sentence2_binary_parse'])
-            label = example['gold_label']
+            label = example.get('gold_label', None)
 
             data.append((premise, hypothesis, label))
 
@@ -35,7 +35,7 @@ def load_mednli(cfg):
         'mli_dev_v1.jsonl',
         'mli_test_v1.jsonl',
     ]
-    filenames = [cfg.data_dir.joinpath(f) for f in filenames]
+    filenames = [cfg.mednli_dir.joinpath(f) for f in filenames]
 
     mednli_train, mednli_dev, mednli_test = [read_mednli(f) for f in filenames]
 
