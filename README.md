@@ -66,6 +66,13 @@ Training the model
 Run the `train.py` file. The options are set in the `config.py` file. Command-line interface is coming soon!
 By default, the model specification and the model weights are saved in the `./data/models` dir.
 
+Training the feature based system
+------------------
+
+To run a traditional feature based system, run the `train_feature_based.py` file. 
+This system uses features like word overlaps, tf-idf similarities, word embeddings similarities, and blue scores. 
+
+
 # Reference
 
 Romanov, A., & Shivade, C. (2018). Lessons from Natural Language Inference in the Clinical Domain. arXiv preprint arXiv:1808.06752.  
