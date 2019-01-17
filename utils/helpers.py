@@ -50,9 +50,8 @@ def create_embeddings_matrix(word_embeddings, vocab):
     return W_emb
 
 
-def create_word_embeddings(cfg, vocab):
+def load_word_embeddings(cfg):
     word_embeddings_filename = None
-
     if cfg.word_embeddings == WordEmbeddings.GloVe:
         word_embeddings_filename = 'glove.840B.300d.pickled'
     if cfg.word_embeddings == WordEmbeddings.MIMIC:
@@ -71,6 +70,12 @@ def create_word_embeddings(cfg, vocab):
     word_embeddings_filename = cfg.word_embeddings_dir.joinpath(word_embeddings_filename)
     word_embeddings = load_pickle(word_embeddings_filename)
     print(f'Embeddings: {len(word_embeddings)}')
+
+    return word_embeddings
+
+
+def create_word_embeddings(cfg, vocab):
+    word_embeddings = load_word_embeddings(cfg)
 
     W_emb = create_embeddings_matrix(word_embeddings, vocab)
 
