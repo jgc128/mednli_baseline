@@ -70,7 +70,8 @@ Training the feature based system
 ------------------
 
 To run a traditional feature based system, run the `train_feature_based.py` file. 
-This system uses features like word overlaps, tf-idf similarities, word embeddings similarities, and blue scores. 
+This system achieves 0.523 accuracy on the dev set using a gradient boosting classifier 
+with features based on word overlaps, tf-idf similarities, word embeddings similarities, and blue scores.
 
 
 # Reference
