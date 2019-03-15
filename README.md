@@ -14,6 +14,7 @@ Installation
 Downloading the dataset, word embeddings, and pre-trained models
 ----------------------------------------------------------------
 1. Create the `./data` directory inside the cloned repository
+    1. Create the `./data/cache` directory 
 1. Download MedNLI: https://jgc128.github.io/mednli/
     1. Extract the content of the `mednli_data.zip` archive into the `./data/mednli` dir (`unzip -d data/mednli mednli_data.zip`)
 1. Download word embeddings (see the table below) and put the `*.pickled` files into the `./data/word_embeddings/` dir (`wget -P data/word_embeddings/ https://mednli.blob.core.windows.net/shared/word_embeddings/https://mednli.blob.core.windows.net/shared/word_embeddings/mimic.fastText.no_clean.300d.pickled`)
