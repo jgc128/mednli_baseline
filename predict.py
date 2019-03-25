@@ -24,7 +24,7 @@ def get_input_data(filename):
     input_data = None
 
     if filename.suffix == '.jsonl':
-        input_data = read_mednli(input_filename)
+        input_data = read_mednli(filename)
 
     if filename.suffix == '.txt':
         input_data = read_sentences(filename)
