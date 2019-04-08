@@ -1,8 +1,10 @@
+import csv
 import sys
 from pathlib import Path
 
 import numpy as np
 import torch.nn.functional as F
+from sklearn.metrics import accuracy_score
 
 from utils.dataset import NLIDataset
 from utils.helpers import create_model
@@ -13,9 +15,16 @@ from utils.torch import load_weights, create_data_loader, to_device
 
 def save_predictions(predictions, filename):
     with open(filename, 'w') as f:
+        writer = csv.writer(f)
+
+        # write the header
         labels = sorted(NLIDataset.LABEL_TO_ID.keys(), key=lambda l: NLIDataset.LABEL_TO_ID[l])
-        f.write(','.join(labels) + '\n')
-        np.savetxt(f, predictions, fmt='%.5f', delimiter=',')
+        header = ['label_pred', ] + labels
+        writer.writerow(header)
+
+        labels_pred = [labels[i] for i in predictions.argmax(axis=1)]
+        for label, probs in zip(labels_pred, predictions):
+            writer.writerow([label, ] + [f'{p:.5f}' for p in probs])
 
     print(f'Saved: {filename}')
 
@@ -56,14 +65,22 @@ def main(model_spec_filename, input_filename, output_filename):
     data_loader = create_data_loader(dataset, cfg.batch_size, shuffle=False)
 
     predictions = []
+    labels_true = []
     for batch in data_loader:
-        (premise, hypothesis), _ = to_device(batch)
+        (premise, hypothesis), label = to_device(batch)
         logits = model(premise, hypothesis)
         probabilities = F.softmax(logits, dim=-1).detach().cpu().numpy()
         predictions.append(probabilities)
 
+        labels_true.extend(label.cpu().numpy())
+
     predictions = np.concatenate(predictions)
     print(f'Predictions: {predictions.shape}')
+
+    # calc the accuracy
+    labels_pred = predictions.argmax(axis=1)
+    accuracy = accuracy_score(labels_true, labels_pred)
+    print(f'Accuracy: {accuracy:.3f}')
 
     save_predictions(predictions, output_filename)
 
