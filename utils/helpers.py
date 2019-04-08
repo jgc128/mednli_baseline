@@ -91,6 +91,8 @@ def create_model(cfg, model_params, **kwargs):
         model_class = models.SimpleModel
     if cfg.model == Models.InferSent:
         model_class = models.InferSentModel
+    if cfg.model == Models.ESIM:
+        model_class = models.ESIMModel
 
     model = model_class(**model_params)
     init_weights(model)

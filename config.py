@@ -19,6 +19,7 @@ class WordEmbeddings(enum.Enum):
 class Models(enum.Enum):
     Simple = 'simple' # CBOW model
     InferSent = 'infersent'
+    ESIM = 'esim'
 
 
 @dataclasses.dataclass
